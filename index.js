@@ -74,6 +74,38 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/comment/:id", async (req, res) => {
+      const bookId = req.params.id;
+      const comment = req.body;
+
+      const result = await booksCollection.updateOne(
+        { _id: new ObjectId(bookId) },
+        { $push: { comments: comment } }
+      );
+      console.log(result);
+
+      if (result.modifiedCount !== 1) {
+        console.error("Book not found or comment not added");
+        res.json({ error: "Book not found or comment not added" });
+        return;
+      }
+      res.json({ message: "comment added successfully" });
+    });
+
+    app.get("/comment/:id", async (req, res) => {
+      const bookId = req.params.id;
+
+      const result = await booksCollection.findOne(
+        { _id: new ObjectId(bookId) },
+        { projection: { _id: 0, comments: 1 } }
+      );
+      if (result) {
+        res.json(result);
+      } else {
+        res.status(404).json({ error: "Book Not Found" });
+      }
+    });
+
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
